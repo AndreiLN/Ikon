@@ -1,0 +1,394 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Export generator="Cache" version="25" zv="Cache for Windows (x86-64) 2016.2.1 (Build 803)" ts="2017-03-29 08:08:05">
+<Class name="Ikon.Identicon">
+<Description><![CDATA[
+<b>Identicon Generator in COS</b><br/>
+Author: Andrei Luiz Nenevê - alneneve@gmail.com<br/>
+Requires: Caché 2016.2 or Newer<br/><br/>
+Example:<br/>
+<example>
+; Parameters=> Word, Directory, Size, Background amount of red, green, blue
+Do ##class(Ikon.Identicon).%New("test","C:\Identicons\",250,255,255,155)
+</example>]]></Description>
+<Super>%RegisteredObject</Super>
+<TimeChanged>64371,28873.084256</TimeChanged>
+<TimeCreated>64370,31897.046916</TimeCreated>
+
+<Property name="Name">
+<Type>%String</Type>
+</Property>
+
+<Property name="Hash">
+<Type>%DynamicArray</Type>
+</Property>
+
+<Property name="Color">
+<Type>%DynamicArray</Type>
+</Property>
+
+<Property name="Grid">
+<Type>%DynamicArray</Type>
+</Property>
+
+<Property name="GridPoint">
+<Type>%DynamicArray</Type>
+</Property>
+
+<Property name="PixelMap">
+<Type>%DynamicArray</Type>
+</Property>
+
+<Property name="Directory">
+<Type>%String</Type>
+<InitialExpression>"C:\Identicons\"</InitialExpression>
+</Property>
+
+<Property name="FileFullName">
+<Type>%String</Type>
+</Property>
+
+<Property name="Size">
+<Type>%Integer</Type>
+<InitialExpression>250</InitialExpression>
+</Property>
+
+<Property name="BackgroundColor">
+<Type>%String</Type>
+<InitialExpression>"255,255,255"</InitialExpression>
+</Property>
+
+<Method name="HashInput">
+<Private>1</Private>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	Set tSC = $$$OK
+	Try {
+		Set identicon  = ##class(%SYSTEM.Encryption).MD5Hash(..Name)
+		Set ..Hash = ##class(%DynamicArray).%New()
+		For i=1:1:$Length(identicon){
+			$$$THROWONERROR(tSC, ..Hash.%Push($ASCII($Extract(identicon,i))))
+		}
+	} Catch tException {
+		Set:$$$ISOK(tSC) tSC = tException.AsStatus()
+	}
+	Quit tSC
+]]></Implementation>
+</Method>
+
+<Method name="PickColor">
+<Private>1</Private>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	Set tSC = $$$OK
+	Try {
+		Set ..Color = ##class(%DynamicArray).%New()
+		$$$THROWONERROR(tSC, ..Color.%Push(..Hash.%Get(0))) //Red
+		$$$THROWONERROR(tSC, ..Color.%Push(..Hash.%Get(1))) //Green
+		$$$THROWONERROR(tSC, ..Color.%Push(..Hash.%Get(2))) //Blue
+	} Catch tException {
+		Set:$$$ISOK(tSC) tSC = tException.AsStatus()
+	}
+	Quit tSC
+]]></Implementation>
+</Method>
+
+<Method name="BuildGrid">
+<Private>1</Private>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	Set tSC = $$$OK
+	Try {
+		Set ..Grid = ##class(%DynamicArray).%New()
+		For i=0:3:..Hash.%Size(){
+			Quit:(i+3>(..Hash.%Size()-1))
+			Set chunk = ##class(%DynamicArray).%New()
+			Set fst = ..Hash.%Get(i), sec = ..Hash.%Get(i+1)
+			$$$THROWONERROR(tSC, ..Grid.%Push(fst))
+			$$$THROWONERROR(tSC, ..Grid.%Push(sec))
+			$$$THROWONERROR(tSC, ..Grid.%Push(..Hash.%Get(i+2)))
+			$$$THROWONERROR(tSC, ..Grid.%Push(sec))
+			$$$THROWONERROR(tSC, ..Grid.%Push(fst))
+		}
+	} Catch tException {
+		Set:$$$ISOK(tSC) tSC = tException.AsStatus()
+	}
+	Quit tSC
+]]></Implementation>
+</Method>
+
+<Method name="FilterOddSquares">
+<Private>1</Private>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	Set tSC = $$$OK
+	Try {
+		Set ..GridPoint = ##class(%DynamicArray).%New()
+		Set iter = ..Grid.%GetIterator()
+		While iter.%GetNext(.key,.value){
+			If value # 2 = 0{
+				Set obj = ##class(%DynamicObject).%New()
+				Set obj.key = key
+				Set obj.value = value
+				$$$THROWONERROR(tSC, ..GridPoint.%Push(obj))
+			}
+		}
+	} Catch tException {
+		Set:$$$ISOK(tSC) tSC = tException.AsStatus()
+	}
+	Quit tSC
+]]></Implementation>
+</Method>
+
+<Method name="BuildPixelMap">
+<Private>1</Private>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	Set tSC = $$$OK
+	Try {
+		Set ..PixelMap = ##class(%DynamicArray).%New()
+		Set iter = ..GridPoint.%GetIterator()
+		While iter.%GetNext(.key,.value){
+			Set horizontal = (value.key # 5) * (..Size/5)
+			Set vertical = (value.key \ 5) * (..Size/5)
+			
+			Set point = ##class(%DynamicObject).%New()
+			
+			Set cord = ##class(%DynamicObject).%New()
+			$$$THROWONERROR(tSC, cord.%Set("x",horizontal))
+			$$$THROWONERROR(tSC, cord.%Set("y",vertical))
+			$$$THROWONERROR(tSC, point.%Set("topLeft",cord))
+			
+			Set cord = ##class(%DynamicObject).%New()
+			$$$THROWONERROR(tSC, cord.%Set("x",horizontal+(..Size/5)))
+			$$$THROWONERROR(tSC, cord.%Set("y",vertical+(..Size/5)))
+			$$$THROWONERROR(tSC, point.%Set("bottomRight",cord))
+			
+			$$$THROWONERROR(tSC, ..PixelMap.%Push(point))
+		}
+	} Catch tException {
+		Set:$$$ISOK(tSC) tSC = tException.AsStatus()
+	}
+	Quit tSC
+]]></Implementation>
+</Method>
+
+<Method name="GenerateFileName">
+<Private>1</Private>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	Set tSC = $$$OK
+	Try {
+		If '##class(%File).DirectoryExists(..Directory) {
+		    Set tSC = ##class(%File).CreateDirectoryChain(..Directory) 
+		}   
+		Set ..FileFullName = ..Directory_..Name_".jpg"
+	} Catch tException {
+		Set:$$$ISOK(tSC) tSC = tException.AsStatus()
+	}
+	Quit tSC
+]]></Implementation>
+</Method>
+
+<Method name="CreateImage">
+<Private>1</Private>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	Set tSC = $$$OK
+	Try {
+		Set tBack = $ListFromString(..BackgroundColor,",")
+		Set tImage = ##class(Ikon.Processor).New(..Size,..Size,$List(tBack,1),$List(tBack,2),$List(tBack,3))
+		Do tImage.SetPen(..Color.%Get(0),..Color.%Get(1),..Color.%Get(2))
+		Set iter = ..PixelMap.%GetIterator()
+		While iter.%GetNext(.key,.value){
+			Set posInicialX = value.topLeft.x
+			Set posInicialY = value.topLeft.y
+			Set posFinalX = value.bottomRight.x
+			Set posFinalY = value.bottomRight.y
+			For y=posInicialY:1:posFinalY{
+				For x=posInicialX:1:posFinalX{
+					Do tImage.Plot(x,y)
+				}
+			}
+		}
+		s a=..FileFullName
+		o a:"WNS":10 e
+		u a
+		d tImage.WriteBitmap()
+		c a
+		d tImage.%Close()
+	} Catch tException {
+		Set:$$$ISOK(tSC) tSC = tException.AsStatus()
+	}
+	Quit tSC
+]]></Implementation>
+</Method>
+
+<Method name="Generate">
+<FormalSpec>pName:%String="Caché",pDirectory:%String="",pSize=250,Red:%Integer=255,Green:%Integer=255,Blue:%Integer=255</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	Set tSC = $$$OK
+	Try {
+		Set:pName'="" ..Name = pName
+		Set:pDirectory'="" ..Directory = pDirectory
+		Set ..BackgroundColor = Red_","_Green_","_Blue
+		Set ..Size = pSize
+		$$$THROWONERROR(tSC, ..HashInput())
+		$$$THROWONERROR(tSC, ..PickColor())
+		$$$THROWONERROR(tSC, ..BuildGrid())
+		$$$THROWONERROR(tSC, ..FilterOddSquares())
+		$$$THROWONERROR(tSC, ..BuildPixelMap())
+		$$$THROWONERROR(tSC, ..GenerateFileName())
+		$$$THROWONERROR(tSC, ..CreateImage())
+		Write !,"File '"_..Directory_..Name_"' successfully generated!",!
+	} Catch tException {
+		Set:$$$ISERR(tSC) tSC = tException.AsStatus()
+	}
+	Quit tSC
+]]></Implementation>
+</Method>
+
+<Method name="%OnNew">
+<FormalSpec>pName:%String="",pDirectory:%String="",pSize=250,Red:%Integer=255,Green:%Integer=255,Blue:%Integer=255</FormalSpec>
+<Private>1</Private>
+<ReturnType>%Status</ReturnType>
+<ServerOnly>1</ServerOnly>
+<Implementation><![CDATA[
+	Set tSC = $$$OK
+	Try {
+		Set:pName'="" ..Name = pName
+		Set:pDirectory'="" ..Directory = pDirectory
+		Set ..BackgroundColor = Red_","_Green_","_Blue
+		Set ..Size = pSize
+		If pName'=""{
+			$$$THROWONERROR(tSC, ..HashInput())
+			$$$THROWONERROR(tSC, ..PickColor())
+			$$$THROWONERROR(tSC, ..BuildGrid())
+			$$$THROWONERROR(tSC, ..FilterOddSquares())
+			$$$THROWONERROR(tSC, ..BuildPixelMap())
+			$$$THROWONERROR(tSC, ..GenerateFileName())
+			$$$THROWONERROR(tSC, ..CreateImage())
+			Write !,"File '"_..Directory_..Name_"' successfully generated!",!
+		}
+	} Catch tException {
+		Set:$$$ISERR(tSC) tSC = tException.AsStatus()
+	}
+	Quit tSC
+]]></Implementation>
+</Method>
+</Class>
+
+
+<Class name="Ikon.Processor">
+<Description><![CDATA[
+This class is a refactored version from Captcha generator originally made by Fabio Gonçalves
+<br/>This refactored version to do the generation of identicons was made by Andrei Luiz Nenevê]]></Description>
+<ClassType/>
+<ProcedureBlock>0</ProcedureBlock>
+<Super>%RegisteredObject</Super>
+<TimeChanged>64370,61907.174527</TimeChanged>
+<TimeCreated>60704,58383.346792</TimeCreated>
+
+<Property name="Data">
+<MultiDimensional>1</MultiDimensional>
+</Property>
+
+<Property name="Width">
+<Type>%Integer</Type>
+</Property>
+
+<Property name="Height">
+<Type>%Integer</Type>
+</Property>
+
+<Property name="PenColor">
+<Type>%String</Type>
+<Parameter name="TRUNCATE" value="1"/>
+</Property>
+
+<Method name="New">
+<ClassMethod>1</ClassMethod>
+<FormalSpec>width:%Integer,height:%Integer,red:%Integer=255,green:%Integer=255,blue:%Integer=255</FormalSpec>
+<ReturnType>Ikon.Processor</ReturnType>
+<Implementation><![CDATA[
+	Set img = ##class(Ikon.Processor).%New()
+	Set img.Width = width,img.Height = height
+	For x = 1:1:width{
+		For y = 1:1:height{
+			Set img.Data(x,y) = $Char(blue,green,red)
+		}
+	}
+	Do img.SetPen(0,0,0)
+	Quit img
+]]></Implementation>
+</Method>
+
+<Method name="SetPen">
+<FormalSpec>red:%Integer,green:%Integer,blue:%Integer</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	Set ..PenColor = $Char(blue,green,red)	
+	Quit $$$OK
+]]></Implementation>
+</Method>
+
+<Method name="Plot">
+<FormalSpec>x:%Integer,y:%Integer</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	Quit:(x<1||y<1||y>..Height||x>..Width) 1
+	Set ..Data(x,y) = ..PenColor
+	Quit $$$OK
+]]></Implementation>
+</Method>
+
+<Method name="SetBytes">
+<ClassMethod>1</ClassMethod>
+<FormalSpec>decimal:%Integer,length:%Integer</FormalSpec>
+<ReturnType>%String</ReturnType>
+<Implementation><![CDATA[
+	Set ret = ""
+	For i = 1:1:length{
+		Set ret = ret_$Char(decimal#256), decimal = decimal/256
+	}
+	Quit ret
+]]></Implementation>
+</Method>
+
+<Method name="WriteBitmap">
+<Implementation><![CDATA[
+    Set bfType = "BM",
+    	bfSize = 0,
+    	bfReserved1 = ..SetBytes(0,2),
+    	bfReserved2=..SetBytes(0,2),
+    	bfOffsetBits=..SetBytes(54,4),
+    	biSize=..SetBytes(40,4),
+    	biWidth=..SetBytes(..Width,4),
+    	biHeight=..SetBytes(..Height,4),
+    	biPlanes=..SetBytes(1,2),
+    	biBitCount=..SetBytes(24,2),
+    	biCompression=..SetBytes(0,4),
+    	biSizeImage=..SetBytes(0,4),
+    	biXPelsPerMeter=..SetBytes(0,4),
+    	biYPelsPerMeter=..SetBytes(0,4),
+    	biColorsUsed=..SetBytes(0,4),
+    	biColorsImportant=..SetBytes(0,4),
+    	padding=(..Width*3)#4,
+    	padding=$s(padding=0:"",1:$e($c(0,0,0),1,4-padding)),
+    	sizeimage=((..Width*3)+$l(padding))*..Height,
+    	bfSize=..SetBytes(14+40+sizeimage,4),
+    	biSizeImage=..SetBytes(sizeimage,4)
+	Write bfType_bfSize_bfReserved1_bfReserved2_bfOffsetBits
+	Write biSize_biWidth_biHeight_biPlanes_biBitCount_biCompression_biSizeImage_biXPelsPerMeter_biYPelsPerMeter_biColorsUsed_biColorsImportant
+	For y = ..Height:-1:1 {
+		For x=1:1:..Width {
+			Write ..Data(x,y)
+		}
+		Write padding
+	}
+]]></Implementation>
+</Method>
+</Class>
+
+
+</Export>
