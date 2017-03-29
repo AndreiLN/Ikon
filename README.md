@@ -10,7 +10,7 @@ Identicon generator for Intersystems Caché. Good to use in Mojo applications.
 6. Amount of background blue (Default = 255).
 
 ## Example
-```ruby
+```COS
 Do ##class(Ikon.Identicon).%New("test","C:\Identicons\",250,255,255,155)
 ```
 Result of example above:
