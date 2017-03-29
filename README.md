@@ -1,4 +1,4 @@
-# Ikon  :sparkle:
+#  :white_square_button:  Ikon  :black_square_button:
 Identicon generator for Intersystems Caché. Good to use in Mojo applications.
 
 ## Parameters
