@@ -18,4 +18,4 @@ Result of example above:
 ![Result](https://github.com/AndreiLN/Ikon/blob/master/test.jpg)
 
 ## Documentation and Discussion
-See the ![Article on InterSystems Developer Community](https://community.intersystems.com/post/identicon-generator-cach%C3%A9)
+See the [Article on InterSystems Developer Community](https://community.intersystems.com/post/identicon-generator-cach%C3%A9)
