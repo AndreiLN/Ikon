@@ -14,4 +14,4 @@ Identicon generator for Intersystems Caché. Good to use in Mojo applications.
 Do ##class(Ikon.Identicon).%New("test","C:\Identicons\",250,255,255,155)
 ```
 Result of example above:
-![Result]()
+![Result](https://github.com/AndreiLN/Ikon/blob/master/test.jpg)
