@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Export generator="Cache" version="25">
+  <Document name="ikon.ZPM">
+    <Module>
+      <Name>Ikon</Name>
+      <Version>1.0.0</Version>
+      <Packaging>module</Packaging>
+      <SourcesRoot>src</SourcesRoot>
+      <Resource Name="Ikon.Identicon.CLS"/>
+      <Resource Name="Ikon.Processor.CLS"/>
+    </Module>    
+  </Document>
+</Export>
