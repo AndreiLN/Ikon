@@ -3,7 +3,7 @@
   <Document name="ikon.ZPM">
     <Module>
       <Name>Ikon</Name>
-      <Version>1.0.4</Version>
+      <Version>1.0.5</Version>
       <Description>Identicon generator for Intersystems Caché. Good to use in Mojo applications.</Description>
       <Packaging>module</Packaging>
       <SourcesRoot>src</SourcesRoot>
