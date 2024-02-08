@@ -39,6 +39,9 @@ Test from docker console
 $ docker-compose exec iris1 iris session iris
 USER>
 ```
+Do ##class(Ikon.Identicon).%New("dockerdemo","/home/irisowner/dev/demo/",250,105,255,155)
+```
+```
 or using **WebTerminal**
 ```
 http://localhost:42773/terminal/
